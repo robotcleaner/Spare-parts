@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>追觅配件查询系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .search-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .search-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input-wrapper input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 1.2rem;
+        }
+
+        .country-select-wrapper {
+            min-width: 180px;
+        }
+
+        .country-select-wrapper select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .country-select-wrapper select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stats-bar .count {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .accessory-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .accessory-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 3rem;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .card-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .card-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .card-part-number {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .card-part-number .label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .card-part-number .value {
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #667eea;
+            letter-spacing: 0.5px;
+        }
+
+        .card-country {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .card-country .flag {
+            font-size: 1.2rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .no-results h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .no-results p {
+            opacity: 0.8;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: rgba(0,0,0,0.1);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #666;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: rgba(0,0,0,0.2);
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 4rem;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-body h2 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            width: 100px;
+            color: #666;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .detail-value.part-number {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .search-row {
+                flex-direction: column;
+            }
+
+            .search-input-wrapper,
+            .country-select-wrapper {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 追觅配件查询系统</h1>
+            <p>搜索配件名称，选择国家，快速查询料号与图片</p>
+        </div>
+
+        <div class="search-panel">
+            <div class="search-row">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="输入配件名称搜索..." autocomplete="off">
+                </div>
+                <div class="country-select-wrapper">
+                    <select id="countrySelect">
+                        <option value="">全部国家</option>
+                    </select>
+                </div>
+            </div>
+            <div class="stats-bar">
+                <span>共找到 <span class="count" id="resultCount">0</span> 个配件</span>
+                <span id="filterInfo">显示全部</span>
+            </div>
+        </div>
+
+        <div class="results-grid" id="resultsGrid"></div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <h2>😕 未找到相关配件</h2>
+            <p>请尝试其他关键词或选择不同的国家</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-image" id="modalImage">📷</div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        // 获取所有唯一的国家列表
+        function getCountries() {
+            const countries = new Set();
+            accessoriesData.forEach(item => {
+                if (item.country) countries.add(item.country);
+            });
+            return Array.from(countries).sort();
+        }
+
+        // 填充国家下拉框
+        function populateCountrySelect() {
+            const select = document.getElementById('countrySelect');
+            const countries = getCountries();
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                select.appendChild(option);
+            });
+        }
+
+        // 获取国旗emoji
+        function getCountryFlag(country) {
+            const flags = {
+                '中国': '🇨🇳',
+                '日本': '🇯🇵',
+                '韩国': '🇰🇷',
+                '澳大利亚': '🇦🇺',
+                '美国': '🇺🇸',
+                '德国': '🇩🇪',
+                '英国': '🇬🇧',
+                '法国': '🇫🇷',
+                '意大利': '🇮🇹',
+                '西班牙': '🇪🇸',
+                '加拿大': '🇨🇦',
+                '新加坡': '🇸🇬',
+                '马来西亚': '🇲🇾',
+                '泰国': '🇹🇭',
+                '越南': '🇻🇳',
+                '印度': '🇮🇳',
+                '俄罗斯': '🇷🇺',
+                '巴西': '🇧🇷',
+                '墨西哥': '🇲🇽',
+                '印尼': '🇮🇩',
+                '菲律宾': '🇵🇭',
+                '荷兰': '🇳🇱',
+                '波兰': '🇵🇱',
+                '土耳其': '🇹🇷',
+                '阿联酋': '🇦🇪',
+                '沙特阿拉伯': '🇸🇦',
+                '以色列': '🇮🇱',
+                '瑞典': '🇸🇪',
+                '挪威': '🇳🇴',
+                '丹麦': '🇩🇰',
+                '芬兰': '🇫🇮'
+            };
+            return flags[country] || '🌍';
+        }
+
+        // 渲染配件卡片
+        function renderCard(item) {
+            const imageHtml = item.image
+                ? `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'; this.parentElement.textContent='📷'">`
+                : '';
+
+            return `
+                <div class="accessory-card" data-id="${item.id}">
+                    <div class="card-image">
+                        ${imageHtml || '📷'}
+                    </div>
+                    <div class="card-body">
+                        <span class="card-category">${item.category || '配件'}</span>
+                        <div class="card-name">${item.name}</div>
+                        <div class="card-part-number">
+                            <span class="label">料号：</span>
+                            <span class="value">${item.partNumber}</span>
+                        </div>
+                        <div class="card-country">
+                            <span class="flag">${getCountryFlag(item.country)}</span>
+                            <span>${item.country}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染结果
+        function renderResults(items) {
+            const grid = document.getElementById('resultsGrid');
+            const noResults = document.getElementById('noResults');
+            const count = document.getElementById('resultCount');
+            const filterInfo = document.getElementById('filterInfo');
+
+            count.textContent = items.length;
+
+            if (items.length === 0) {
+                grid.innerHTML = '';
+                noResults.style.display = 'block';
+                filterInfo.textContent = '无匹配结果';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            grid.innerHTML = items.map(renderCard).join('');
+
+            // 添加点击事件
+            document.querySelectorAll('.accessory-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = parseInt(card.dataset.id);
+                    const item = accessoriesData.find(a => a.id === id);
+                    if (item) showModal(item);
+                });
+            });
+
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const country = document.getElementById('countrySelect').value;
+            const filters = [];
+            if (searchTerm) filters.push(`关键词"${searchTerm}"`);
+            if (country) filters.push(`国家"${country}"`);
+            filterInfo.textContent = filters.length > 0 ? filters.join(' + ') : '显示全部';
+        }
+
+        // 搜索和筛选
+        function filterAccessories() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            const country = document.getElementById('countrySelect').value;
+
+            const filtered = accessoriesData.filter(item => {
+                const matchSearch = !searchTerm ||
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    item.partNumber.toLowerCase().includes(searchTerm) ||
+                    (item.category && item.category.toLowerCase().includes(searchTerm));
+                const matchCountry = !country || item.country === country;
+                return matchSearch && matchCountry;
+            });
+
+            renderResults(filtered);
+        }
+
+        // 显示详情弹窗
+        function showModal(item) {
+            const overlay = document.getElementById('modalOverlay');
+            const imageDiv = document.getElementById('modalImage');
+            const bodyDiv = document.getElementById('modalBody');
+
+            if (item.image) {
+                imageDiv.innerHTML = `<img src="${item.image}" alt="${item.name}" onerror="this.textContent='📷'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center';">`;
+            } else {
+                imageDiv.textContent = '📷';
+            }
+
+            bodyDiv.innerHTML = `
+                <h2>${item.name}</h2>
+                <div class="detail-row">
+                    <span class="detail-label">料号</span>
+                    <span class="detail-value part-number">${item.partNumber}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">国家</span>
+                    <span class="detail-value">${getCountryFlag(item.country)} ${item.country}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">品类</span>
+                    <span class="detail-value">${item.category || '-'}</span>
+                </div>
+                ${item.description ? `
+                <div class="detail-row">
+                    <span class="detail-label">说明</span>
+                    <span class="detail-value">${item.description}</span>
+                </div>
+                ` : ''}
+                ${item.price ? `
+                <div class="detail-row">
+                    <span class="detail-label">价格</span>
+                    <span class="detail-value">${item.price}</span>
+                </div>
+                ` : ''}
+            `;
+
+            overlay.classList.add('active');
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            populateCountrySelect();
+            renderResults(accessoriesData);
+
+            document.getElementById('searchInput').addEventListener('input', filterAccessories);
+            document.getElementById('countrySelect').addEventListener('change', filterAccessories);
+
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('modalOverlay').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) closeModal();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+        });
+    </script>
+</body>
+</html>
