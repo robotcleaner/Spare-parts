@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个护配件查询系统</title>
+    <title>追觅配件查询系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -208,33 +208,40 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>个护配件查询系统</h1>
-            <p>输入关键词即可查询所有匹配的配件料号</p>
+            <h1>追觅配件查询系统</h1>
+            <p>输入关键词查询个护 / 扫地机配件料号</p>
         </div>
 
         <div class="search-panel">
             <div class="form-group">
                 <label>备件名称关键词 <span class="required">*</span></label>
-                <input type="text" id="partName" placeholder="例如：风嘴、刀头、精华、挂架、收纳包..." autocomplete="off">
+                <input type="text" id="partName" placeholder="例如：风嘴、刀头、主刷、滤网、边刷..." autocomplete="off">
             </div>
 
             <div class="form-group">
-                <label>所在国家 <span class="optional">（可选，留空查询所有国家）</span></label>
+                <label>产品品类 <span class="optional">（可选）</span></label>
+                <select id="categorySelect">
+                    <option value="">全部品类</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>所在国家 <span class="optional">（可选）</span></label>
                 <select id="countrySelect">
                     <option value="">全部国家</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>查找机型 <span class="optional">（可选，留空查询所有机型）</span></label>
-                <input type="text" id="modelInput" placeholder="例如：Glory、Gleam、S9pro..." autocomplete="off">
+                <label>查找机型 <span class="optional">（可选）</span></label>
+                <input type="text" id="modelInput" placeholder="例如：Glory、L10s Ultra、X40..." autocomplete="off">
             </div>
 
             <button class="submit-btn" id="confirmBtn">查询</button>
         </div>
 
         <div class="footer-note">
-            追觅个护配件查询
+            追觅配件查询系统
         </div>
     </div>
 
@@ -269,13 +276,25 @@
             return Array.from(countries).sort();
         }
 
-        function populateCountrySelect() {
-            const select = document.getElementById('countrySelect');
-            getCountries().forEach(country => {
+        function getCategories() {
+            const cats = new Set();
+            accessoriesData.forEach(item => { if (item.category) cats.add(item.category); });
+            return Array.from(cats).sort();
+        }
+
+        function populateSelects() {
+            const countrySel = document.getElementById('countrySelect');
+            getCountries().forEach(c => {
                 const opt = document.createElement('option');
-                opt.value = country;
-                opt.textContent = country;
-                select.appendChild(opt);
+                opt.value = c; opt.textContent = c;
+                countrySel.appendChild(opt);
+            });
+
+            const catSel = document.getElementById('categorySelect');
+            getCategories().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                catSel.appendChild(opt);
             });
         }
 
@@ -292,15 +311,20 @@
                 '阿联酋': '\uD83C\uDDE6\uD83C\uDDEA', '沙特阿拉伯': '\uD83C\uDDF8\uD83C\uDDE6', '以色列': '\uD83C\uDDEE\uD83C\uDDF1',
                 '瑞典': '\uD83C\uDDF0\uD83C\uDDEA', '挪威': '\uD83C\uDDF3\uD83C\uDDF4', '丹麦': '\uD83C\uDDE9\uD83C\uDDF0',
                 '芬兰': '\uD83C\uDDEB\uD83C\uDDEE', '台湾': '\uD83C\uDDF9\uD83C\uDDFC', '欧洲': '\uD83C\uDDEA\uD83C\uDDFA',
-                '欧美': '\uD83C\uDDFA\uD83C\uDDE6'
+                '欧美': '\uD83C\uDDFA\uD83C\uDDE6', '通用': '\uD83C\uDF10'
             };
             return flags[country] || '\uD83C\uDF10';
+        }
+
+        function getCategoryIcon(cat) {
+            return cat === '个护' ? '\u2728' : (cat === '扫地机' ? '\uD83E\uDDF9' : '\uD83D\uDCC1');
         }
 
         function doSearch() {
             const keyword = document.getElementById('partName').value.trim().toLowerCase();
             const country = document.getElementById('countrySelect').value;
             const model = document.getElementById('modelInput').value.trim().toLowerCase();
+            const category = document.getElementById('categorySelect').value;
 
             if (!keyword) {
                 alert('请输入备件名称关键词');
@@ -309,28 +333,29 @@
             }
 
             const matched = accessoriesData.filter(item => {
-                const kw = keyword;
                 const text = (item.name + ' ' + (item.partNumber || '') + ' ' + (item.model || '') + ' ' + (item.description || '')).toLowerCase();
-                const matchKeyword = text.includes(kw) || (item.partNumber && item.partNumber.toLowerCase().includes(kw));
+                const matchKeyword = text.includes(keyword) || (item.partNumber && item.partNumber.toLowerCase().includes(keyword));
                 const matchCountry = !country || item.country === country;
                 const matchModel = !model || (item.model && item.model.toLowerCase().includes(model)) || model.includes((item.model || '').toLowerCase());
-                return matchKeyword && matchCountry && matchModel;
+                const matchCategory = !category || item.category === category;
+                return matchKeyword && matchCountry && matchModel && matchCategory;
             });
 
             if (matched.length === 0) {
                 showNoResult();
             } else {
-                showResults(matched, keyword, country, model);
+                showResults(matched, keyword, country, model, category);
             }
         }
 
-        function showResults(items, keyword, country, model) {
+        function showResults(items, keyword, country, model, category) {
             const overlay = document.getElementById('resultModal');
             const title = document.getElementById('resultTitle');
             const count = document.getElementById('resultCount');
             const list = document.getElementById('resultList');
 
             const filters = [];
+            if (category) filters.push(category);
             if (country) filters.push(country);
             if (model) filters.push(model);
             title.textContent = '"' + keyword + '"' + (filters.length ? ' · ' + filters.join(' · ') : '') + ' 的查询结果';
@@ -345,9 +370,9 @@
                     '<div class="result-info">' +
                         '<div class="name">' + item.name + '</div>' +
                         '<div class="meta">' +
+                            '<span>' + getCategoryIcon(item.category) + ' ' + item.category + '</span>' +
                             '<span>' + getCountryFlag(item.country) + ' ' + item.country + '</span>' +
                             (item.model ? '<span>\uD83D\uDD27 ' + item.model + '</span>' : '') +
-                            (item.category ? '<span>\uD83D\uDCC1 ' + item.category + '</span>' : '') +
                         '</div>' +
                         '<div class="part-number">' + item.partNumber + '</div>' +
                     '</div>' +
@@ -366,11 +391,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateCountrySelect();
+            populateSelects();
 
             document.getElementById('confirmBtn').addEventListener('click', doSearch);
 
-            ['partName', 'countrySelect', 'modelInput'].forEach(id => {
+            ['partName', 'categorySelect', 'countrySelect', 'modelInput'].forEach(id => {
                 document.getElementById(id).addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') doSearch();
                 });
