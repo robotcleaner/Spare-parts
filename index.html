@@ -3,464 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>追觅配件查询系统</title>
+    <title>个护配件查询系统</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 700px; margin: 0 auto; }
         .header {
             text-align: center;
-            padding: 50px 20px 30px;
+            padding: 40px 20px 25px;
             color: white;
         }
-
-        .header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .header p {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
+        .header h1 { font-size: 2rem; margin-bottom: 8px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .header p { font-size: 0.95rem; opacity: 0.9; }
 
         .search-panel {
             background: white;
             border-radius: 20px;
-            padding: 35px 30px;
+            padding: 30px 25px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
         }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
+        .form-group { margin-bottom: 18px; }
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #333;
         }
-
-        .form-group label .required {
-            color: #e74c3c;
-            margin-left: 2px;
-        }
-
-        .form-group input,
-        .form-group select {
+        .form-group label .required { color: #e74c3c; margin-left: 2px; }
+        .form-group label .optional { color: #888; font-weight: 400; font-size: 0.8rem; margin-left: 4px; }
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 14px 18px;
+            padding: 12px 16px;
             border: 2px solid #e0e0e0;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 1rem;
             transition: all 0.3s ease;
             background: white;
         }
-
-        .form-group input:focus,
-        .form-group select:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
-
-        .form-group input::placeholder {
-            color: #bbb;
-        }
-
+        .form-group input::placeholder { color: #bbb; }
         .submit-btn {
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
+            border-radius: 10px;
+            font-size: 1.05rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            margin-top: 8px;
         }
-
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.4);
         }
 
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        /* Modal */
+        /* Result Modal */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.6);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.55);
             z-index: 1000;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
+        .modal-overlay.active { display: flex; }
         .modal-content {
             background: white;
-            border-radius: 20px;
-            max-width: 500px;
+            border-radius: 16px;
+            max-width: 640px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
-            animation: modalIn 0.3s ease;
+            animation: modalIn 0.25s ease;
         }
-
         @keyframes modalIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
-
         .modal-close {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 36px;
-            height: 36px;
+            top: 12px; right: 12px;
+            width: 32px; height: 32px;
             border: none;
-            background: rgba(0,0,0,0.1);
+            background: rgba(0,0,0,0.08);
             border-radius: 50%;
             cursor: pointer;
-            font-size: 1.2rem;
-            color: #666;
-            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            color: #555;
             z-index: 10;
         }
+        .modal-close:hover { background: rgba(0,0,0,0.15); }
 
-        .modal-close:hover {
-            background: rgba(0,0,0,0.2);
+        .modal-header {
+            padding: 22px 24px 0;
         }
-
-        .modal-image {
-            width: 100%;
-            height: 280px;
-            object-fit: cover;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 4rem;
-        }
-
-        .modal-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .modal-body {
-            padding: 25px;
-        }
-
-        .modal-body h2 {
-            font-size: 1.4rem;
+        .modal-header h2 {
+            font-size: 1.25rem;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
-
-        .modal-subtitle {
+        .modal-header .count {
+            font-size: 0.85rem;
             color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
         }
 
-        .detail-row {
+        .result-list {
+            padding: 16px 20px 20px;
+        }
+        .result-item {
             display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fb;
+            border: 1px solid #eceef2;
+            transition: all 0.2s ease;
         }
+        .result-item:last-child { margin-bottom: 0; }
+        .result-item:hover { background: #f0f2f6; border-color: #d0d4dc; }
 
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-
-        .detail-label {
-            width: 90px;
-            color: #666;
-            font-size: 0.9rem;
+        .result-img {
+            width: 72px; height: 72px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e8ecf1 0%, #dce2e8 100%);
+            display: flex; align-items: center; justify-content: center;
+            color: #999;
+            font-size: 1.6rem;
             flex-shrink: 0;
+            overflow: hidden;
         }
+        .result-img img { width: 100%; height: 100%; object-fit: cover; }
 
-        .detail-value {
-            flex: 1;
-            color: #333;
-            font-weight: 500;
+        .result-info { flex: 1; min-width: 0; }
+        .result-info .name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 6px;
+            line-height: 1.35;
         }
-
-        .detail-value.part-number {
+        .result-info .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            font-size: 0.82rem;
+            color: #666;
+        }
+        .result-info .meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .result-info .part-number {
             font-family: 'Courier New', monospace;
             color: #667eea;
-            font-size: 1.1rem;
             font-weight: 700;
+            font-size: 0.9rem;
+            margin-top: 6px;
+            letter-spacing: 0.3px;
         }
 
-        .no-result-modal .modal-body {
+        /* No result */
+        .no-result-body {
             text-align: center;
             padding: 50px 25px;
         }
-
-        .no-result-modal h2 {
-            color: #e74c3c;
-            margin-bottom: 10px;
-        }
-
-        .no-result-modal p {
-            color: #666;
-        }
+        .no-result-body h3 { color: #e74c3c; margin-bottom: 8px; font-size: 1.1rem; }
+        .no-result-body p { color: #777; font-size: 0.9rem; }
 
         .footer-note {
             text-align: center;
             color: rgba(255,255,255,0.7);
-            margin-top: 25px;
-            font-size: 0.85rem;
+            margin-top: 20px;
+            font-size: 0.8rem;
         }
 
         @media (max-width: 600px) {
-            .header h1 {
-                font-size: 1.6rem;
-            }
-
-            .search-panel {
-                padding: 25px 20px;
-            }
+            .header h1 { font-size: 1.5rem; }
+            .search-panel { padding: 22px 18px; }
+            .modal-content { max-width: 100%; }
+            .result-item { gap: 10px; padding: 12px; }
+            .result-img { width: 60px; height: 60px; font-size: 1.3rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>💇 个护配件查询系统</h1>
-            <p>输入配件名称、选择国家、填写机型，一键查询料号</p>
+            <h1>个护配件查询系统</h1>
+            <p>输入关键词即可查询所有匹配的配件料号</p>
         </div>
 
         <div class="search-panel">
             <div class="form-group">
-                <label>备件名称 <span class="required">*</span></label>
-                <input type="text" id="partName" placeholder="例如：主刷组件、HEPA滤网..." autocomplete="off">
+                <label>备件名称关键词 <span class="required">*</span></label>
+                <input type="text" id="partName" placeholder="例如：风嘴、刀头、精华、挂架、收纳包..." autocomplete="off">
             </div>
 
             <div class="form-group">
-                <label>所在国家 <span class="required">*</span></label>
+                <label>所在国家 <span class="optional">（可选，留空查询所有国家）</span></label>
                 <select id="countrySelect">
-                    <option value="">请选择国家</option>
+                    <option value="">全部国家</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>查找机型 <span class="required">*</span></label>
-                <input type="text" id="modelInput" placeholder="例如：D10、H12 Pro..." autocomplete="off">
+                <label>查找机型 <span class="optional">（可选，留空查询所有机型）</span></label>
+                <input type="text" id="modelInput" placeholder="例如：Glory、Gleam、S9pro..." autocomplete="off">
             </div>
 
-            <button class="submit-btn" id="confirmBtn">🔍 确认查询</button>
+            <button class="submit-btn" id="confirmBtn">查询</button>
         </div>
 
         <div class="footer-note">
-            追觅个护配件查询 · 数据仅供参考
+            追觅个护配件查询
         </div>
     </div>
 
-    <!-- Result Modal -->
+    <!-- Results Modal -->
     <div class="modal-overlay" id="resultModal">
-        <div class="modal-content" id="resultContent">
+        <div class="modal-content">
             <button class="modal-close" id="modalClose">&times;</button>
-            <div class="modal-image" id="modalImage">📷</div>
-            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-header">
+                <h2 id="resultTitle">查询结果</h2>
+                <div class="count" id="resultCount"></div>
+            </div>
+            <div class="result-list" id="resultList"></div>
         </div>
     </div>
 
     <!-- No Result Modal -->
     <div class="modal-overlay" id="noResultModal">
-        <div class="modal-content no-result-modal">
+        <div class="modal-content">
             <button class="modal-close" id="noResultClose">&times;</button>
-            <div class="modal-body">
-                <h2>😕 未找到匹配结果</h2>
-                <p>请检查备件名称、国家或机型是否输入正确</p>
+            <div class="no-result-body">
+                <h3>未找到匹配结果</h3>
+                <p>请尝试更换关键词，或检查拼写是否正确</p>
             </div>
         </div>
     </div>
 
     <script src="data.js"></script>
     <script>
-        // 获取所有唯一的国家列表
         function getCountries() {
             const countries = new Set();
-            accessoriesData.forEach(item => {
-                if (item.country) countries.add(item.country);
-            });
+            accessoriesData.forEach(item => { if (item.country) countries.add(item.country); });
             return Array.from(countries).sort();
         }
 
-        // 填充国家下拉框
         function populateCountrySelect() {
             const select = document.getElementById('countrySelect');
-            const countries = getCountries();
-            countries.forEach(country => {
-                const option = document.createElement('option');
-                option.value = country;
-                option.textContent = country;
-                select.appendChild(option);
+            getCountries().forEach(country => {
+                const opt = document.createElement('option');
+                opt.value = country;
+                opt.textContent = country;
+                select.appendChild(opt);
             });
         }
 
-        // 获取国旗emoji
         function getCountryFlag(country) {
             const flags = {
-                '中国': '🇨🇳', '日本': '🇯🇵', '韩国': '🇰🇷', '澳大利亚': '🇦🇺',
-                '美国': '🇺🇸', '德国': '🇩🇪', '英国': '🇬🇧', '法国': '🇫🇷',
-                '意大利': '🇮🇹', '西班牙': '🇪🇸', '加拿大': '🇨🇦', '新加坡': '🇸🇬',
-                '马来西亚': '🇲🇾', '泰国': '🇹🇭', '越南': '🇻🇳', '印度': '🇮🇳',
-                '俄罗斯': '🇷🇺', '巴西': '🇧🇷', '墨西哥': '🇲🇽', '印尼': '🇮🇩',
-                '菲律宾': '🇵🇭', '荷兰': '🇳🇱', '波兰': '🇵🇱', '土耳其': '🇹🇷',
-                '阿联酋': '🇦🇪', '沙特阿拉伯': '🇸🇦', '以色列': '🇮🇱', '瑞典': '🇸🇪',
-                '挪威': '🇳🇴', '丹麦': '🇩🇰', '芬兰': '🇫🇮'
+                '中国': '\uD83C\uDDE8\uD83C\uDDF3', '日本': '\uD83C\uDDEF\uD83C\uDDF5', '韩国': '\uD83C\uDDF0\uD83C\uDDF7',
+                '澳大利亚': '\uD83C\uDDE6\uD83C\uDDFA', '美国': '\uD83C\uDDFA\uD83C\uDDF8', '德国': '\uD83C\uDDE9\uD83C\uDDEA',
+                '英国': '\uD83C\uDDEC\uD83C\uDDE7', '法国': '\uD83C\uDDEB\uD83C\uDDF7', '意大利': '\uD83C\uDDEE\uD83C\uDDF9',
+                '西班牙': '\uD83C\uDDEA\uD83C\uDDF8', '加拿大': '\uD83C\uDDE8\uD83C\uDDE6', '新加坡': '\uD83C\uDDF8\uD83C\uDDEC',
+                '马来西亚': '\uD83C\uDDF2\uD83C\uDDFE', '泰国': '\uD83C\uDDF9\uD83C\uDDED', '越南': '\uD83C\uDDFB\uD83C\uDDF3',
+                '印度': '\uD83C\uDDEE\uD83C\uDDF3', '俄罗斯': '\uD83C\uDDF7\uD83C\uDDFA', '巴西': '\uD83C\uDDE7\uD83C\uDDF7',
+                '墨西哥': '\uD83C\uDDF2\uD83C\uDDFD', '印尼': '\uD83C\uDDEE\uD83C\uDDE9', '菲律宾': '\uD83C\uDDF5\uD83C\uDDED',
+                '荷兰': '\uD83C\uDDF3\uD83C\uDDF1', '波兰': '\uD83C\uDDF5\uD83C\uDDF1', '土耳其': '\uD83C\uDDF9\uD83C\uDDF7',
+                '阿联酋': '\uD83C\uDDE6\uD83C\uDDEA', '沙特阿拉伯': '\uD83C\uDDF8\uD83C\uDDE6', '以色列': '\uD83C\uDDEE\uD83C\uDDF1',
+                '瑞典': '\uD83C\uDDF0\uD83C\uDDEA', '挪威': '\uD83C\uDDF3\uD83C\uDDF4', '丹麦': '\uD83C\uDDE9\uD83C\uDDF0',
+                '芬兰': '\uD83C\uDDEB\uD83C\uDDEE', '台湾': '\uD83C\uDDF9\uD83C\uDDFC', '欧洲': '\uD83C\uDDEA\uD83C\uDDFA',
+                '欧美': '\uD83C\uDDFA\uD83C\uDDE6'
             };
-            return flags[country] || '🌍';
+            return flags[country] || '\uD83C\uDF10';
         }
 
-        // 执行查询
         function doSearch() {
-            const partName = document.getElementById('partName').value.trim().toLowerCase();
+            const keyword = document.getElementById('partName').value.trim().toLowerCase();
             const country = document.getElementById('countrySelect').value;
             const model = document.getElementById('modelInput').value.trim().toLowerCase();
 
-            if (!partName) {
-                alert('请输入备件名称');
+            if (!keyword) {
+                alert('请输入备件名称关键词');
                 document.getElementById('partName').focus();
-                return;
-            }
-            if (!country) {
-                alert('请选择所在国家');
-                document.getElementById('countrySelect').focus();
-                return;
-            }
-            if (!model) {
-                alert('请输入查找机型');
-                document.getElementById('modelInput').focus();
                 return;
             }
 
             const matched = accessoriesData.filter(item => {
-                const matchName = item.name.toLowerCase().includes(partName) ||
-                    (item.partNumber && item.partNumber.toLowerCase().includes(partName));
-                const matchCountry = item.country === country;
-                const matchModel = !item.model || item.model.toLowerCase().includes(model) ||
-                    model.includes(item.model.toLowerCase());
-                return matchName && matchCountry && matchModel;
+                const kw = keyword;
+                const text = (item.name + ' ' + (item.partNumber || '') + ' ' + (item.model || '') + ' ' + (item.description || '')).toLowerCase();
+                const matchKeyword = text.includes(kw) || (item.partNumber && item.partNumber.toLowerCase().includes(kw));
+                const matchCountry = !country || item.country === country;
+                const matchModel = !model || (item.model && item.model.toLowerCase().includes(model)) || model.includes((item.model || '').toLowerCase());
+                return matchKeyword && matchCountry && matchModel;
             });
 
             if (matched.length === 0) {
                 showNoResult();
             } else {
-                // 如果有多个匹配，取第一个（或可以展示列表）
-                showResult(matched[0]);
+                showResults(matched, keyword, country, model);
             }
         }
 
-        // 显示查询结果弹窗
-        function showResult(item) {
+        function showResults(items, keyword, country, model) {
             const overlay = document.getElementById('resultModal');
-            const imageDiv = document.getElementById('modalImage');
-            const bodyDiv = document.getElementById('modalBody');
+            const title = document.getElementById('resultTitle');
+            const count = document.getElementById('resultCount');
+            const list = document.getElementById('resultList');
 
-            if (item.image) {
-                imageDiv.innerHTML = `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'; this.parentElement.textContent='📷'; this.parentElement.style.display='flex'; this.parentElement.style.alignItems='center'; this.parentElement.style.justifyContent='center';">`;
-            } else {
-                imageDiv.textContent = '📷';
-            }
+            const filters = [];
+            if (country) filters.push(country);
+            if (model) filters.push(model);
+            title.textContent = '"' + keyword + '"' + (filters.length ? ' · ' + filters.join(' · ') : '') + ' 的查询结果';
+            count.textContent = '共找到 ' + items.length + ' 条记录';
 
-            bodyDiv.innerHTML = `
-                <h2>${item.name}</h2>
-                <div class="modal-subtitle">${item.category || '配件'} · ${getCountryFlag(item.country)} ${item.country}</div>
-                <div class="detail-row">
-                    <span class="detail-label">料号</span>
-                    <span class="detail-value part-number">${item.partNumber}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">适配机型</span>
-                    <span class="detail-value">${item.model || '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">国家</span>
-                    <span class="detail-value">${getCountryFlag(item.country)} ${item.country}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">品类</span>
-                    <span class="detail-value">${item.category || '-'}</span>
-                </div>
-                ${item.description ? `
-                <div class="detail-row">
-                    <span class="detail-label">说明</span>
-                    <span class="detail-value">${item.description}</span>
-                </div>
-                ` : ''}
-                ${item.price ? `
-                <div class="detail-row">
-                    <span class="detail-label">价格</span>
-                    <span class="detail-value">${item.price}</span>
-                </div>
-                ` : ''}
-            `;
+            list.innerHTML = items.map(item => {
+                const imgHtml = item.image
+                    ? '<img src="' + item.image + '" alt="' + item.name + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'\uD83D\uDCF7\';">'
+                    : '\uD83D\uDCF7';
+                return '<div class="result-item">' +
+                    '<div class="result-img">' + imgHtml + '</div>' +
+                    '<div class="result-info">' +
+                        '<div class="name">' + item.name + '</div>' +
+                        '<div class="meta">' +
+                            '<span>' + getCountryFlag(item.country) + ' ' + item.country + '</span>' +
+                            (item.model ? '<span>\uD83D\uDD27 ' + item.model + '</span>' : '') +
+                            (item.category ? '<span>\uD83D\uDCC1 ' + item.category + '</span>' : '') +
+                        '</div>' +
+                        '<div class="part-number">' + item.partNumber + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
 
             overlay.classList.add('active');
         }
 
-        // 显示无结果弹窗
         function showNoResult() {
             document.getElementById('noResultModal').classList.add('active');
         }
 
-        // 关闭弹窗
-        function closeModal(overlayId) {
-            document.getElementById(overlayId).classList.remove('active');
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
         }
 
-        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             populateCountrySelect();
 
             document.getElementById('confirmBtn').addEventListener('click', doSearch);
 
-            // 回车键触发查询
             ['partName', 'countrySelect', 'modelInput'].forEach(id => {
                 document.getElementById(id).addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') doSearch();
@@ -470,7 +379,6 @@
             document.getElementById('modalClose').addEventListener('click', () => closeModal('resultModal'));
             document.getElementById('noResultClose').addEventListener('click', () => closeModal('noResultModal'));
 
-            // 点击遮罩关闭
             document.getElementById('resultModal').addEventListener('click', (e) => {
                 if (e.target === e.currentTarget) closeModal('resultModal');
             });
@@ -478,7 +386,6 @@
                 if (e.target === e.currentTarget) closeModal('noResultModal');
             });
 
-            // ESC关闭
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeModal('resultModal');
