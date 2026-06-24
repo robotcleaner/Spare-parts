@@ -141,7 +141,7 @@
         .result-item:hover { background: #f0f2f6; border-color: #d0d4dc; }
 
         .result-img {
-            width: 72px; height: 72px;
+            width: 80px; height: 80px;
             border-radius: 10px;
             background: linear-gradient(135deg, #e8ecf1 0%, #dce2e8 100%);
             display: flex; align-items: center; justify-content: center;
@@ -149,8 +149,53 @@
             font-size: 1.6rem;
             flex-shrink: 0;
             overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease;
         }
+        .result-img:hover { transform: scale(1.05); }
         .result-img img { width: 100%; height: 100%; object-fit: cover; }
+        .result-img .img-placeholder {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+            background: #f0f2f5;
+            color: #bbb;
+            font-size: 0.7rem;
+            gap: 2px;
+        }
+        .result-img .img-placeholder svg {
+            width: 24px; height: 24px;
+            stroke: #ccc;
+        }
+
+        /* Image lightbox */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .lightbox-overlay.active { display: flex; }
+        .lightbox-img {
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
 
         .result-info { flex: 1; min-width: 0; }
         .result-info .name {
@@ -268,17 +313,23 @@
         </div>
     </div>
 
+    <!-- Image Lightbox -->
+    <div class="lightbox-overlay" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <img class="lightbox-img" id="lightboxImg" src="" alt="">
+    </div>
+
     <script src="data.js"></script>
     <script>
         function getCountries() {
             const countries = new Set();
-            accessoriesData.forEach(item => { if (item.country) countries.add(item.country); });
+            sparePartsData.forEach(item => { if (item.country) countries.add(item.country); });
             return Array.from(countries).sort();
         }
 
         function getCategories() {
             const cats = new Set();
-            accessoriesData.forEach(item => { if (item.category) cats.add(item.category); });
+            sparePartsData.forEach(item => { if (item.category) cats.add(item.category); });
             return Array.from(cats).sort();
         }
 
@@ -332,7 +383,7 @@
                 return;
             }
 
-            const matched = accessoriesData.filter(item => {
+            const matched = sparePartsData.filter(item => {
                 const text = (item.name + ' ' + (item.partNumber || '') + ' ' + (item.model || '') + ' ' + (item.description || '')).toLowerCase();
                 const matchKeyword = text.includes(keyword) || (item.partNumber && item.partNumber.toLowerCase().includes(keyword));
                 const matchCountry = !country || item.country === country;
@@ -362,11 +413,12 @@
             count.textContent = '共找到 ' + items.length + ' 条记录';
 
             list.innerHTML = items.map(item => {
+                const placeholderSvg = '<div class="img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>暂无图片</span></div>';
                 const imgHtml = item.image
-                    ? '<img src="' + item.image + '" alt="' + item.name + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'\uD83D\uDCF7\';">'
-                    : '\uD83D\uDCF7';
+                    ? '<img src="' + item.image + '" alt="' + item.name + '" loading="lazy" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'' + placeholderSvg.replace(/"/g, '&quot;') + '\';">'
+                    : placeholderSvg;
                 return '<div class="result-item">' +
-                    '<div class="result-img">' + imgHtml + '</div>' +
+                    '<div class="result-img" data-img="' + (item.image || '') + '" onclick="openLightbox(this)">' + imgHtml + '</div>' +
                     '<div class="result-info">' +
                         '<div class="name">' + item.name + '</div>' +
                         '<div class="meta">' +
@@ -390,6 +442,18 @@
             document.getElementById(id).classList.remove('active');
         }
 
+        function openLightbox(el) {
+            const imgUrl = el.getAttribute('data-img');
+            if (!imgUrl) return;
+            document.getElementById('lightboxImg').src = imgUrl;
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.getElementById('lightboxImg').src = '';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             populateSelects();
 
@@ -411,10 +475,16 @@
                 if (e.target === e.currentTarget) closeModal('noResultModal');
             });
 
+            document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+            document.getElementById('lightbox').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget || e.target.id === 'lightboxImg') closeLightbox();
+            });
+
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeModal('resultModal');
                     closeModal('noResultModal');
+                    closeLightbox();
                 }
             });
         });
