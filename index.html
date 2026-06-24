@@ -414,9 +414,8 @@
 
             list.innerHTML = items.map(item => {
                 const placeholderSvg = '<div class="img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>暂无图片</span></div>';
-                const fallbackPlaceholder = placeholderSvg.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 const imgHtml = item.image
-                    ? '<img src="' + item.image + '" alt="' + item.name + '" loading="lazy" onerror="if(!this.dataset.fallback){this.dataset.fallback=\'1\';var s=this.src.replace(\'/images/\',\'/\');if(s!==this.src){this.src=s;}else{this.style.display=\'none\';this.parentElement.innerHTML=\'' + fallbackPlaceholder + '\';}}else{this.style.display=\'none\';this.parentElement.innerHTML=\'' + fallbackPlaceholder + '\';}">'
+                    ? '<img src="' + item.image + '" alt="' + item.name + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<div class=\\'img-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><path d=\\'M21 15l-5-5L5 21\\'/></svg><span>暂无图片</span></div>\'">'
                     : placeholderSvg;
                 return '<div class="result-item">' +
                     '<div class="result-img" data-img="' + (item.image || '') + '" onclick="openLightbox(this)">' + imgHtml + '</div>' +
@@ -446,23 +445,13 @@
         function openLightbox(el) {
             const imgUrl = el.getAttribute('data-img');
             if (!imgUrl) return;
-            const lbImg = document.getElementById('lightboxImg');
-            lbImg.onerror = function() {
-                if (!lbImg.dataset.fallback) {
-                    lbImg.dataset.fallback = '1';
-                    var s = lbImg.src.replace('/images/', '/');
-                    if (s !== lbImg.src) lbImg.src = s;
-                }
-            };
-            lbImg.src = imgUrl;
+            document.getElementById('lightboxImg').src = imgUrl;
             document.getElementById('lightbox').classList.add('active');
         }
 
         function closeLightbox() {
             document.getElementById('lightbox').classList.remove('active');
-            const lbImg = document.getElementById('lightboxImg');
-            lbImg.src = '';
-            delete lbImg.dataset.fallback;
+            document.getElementById('lightboxImg').src = '';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
