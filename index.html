@@ -69,6 +69,24 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(102,126,234,0.4);
         }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-box {
+            background: #fff0f0;
+            border: 1px solid #e74c3c;
+            color: #c0392b;
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .error-box.active { display: block; }
 
         /* Result Modal */
         .modal-overlay {
@@ -258,6 +276,12 @@
         </div>
 
         <div class="search-panel">
+            <div class="error-box" id="errorBox">
+                <strong>数据加载失败</strong><br>
+                无法加载配件数据，请检查网络连接后刷新页面。<br>
+                <small>提示：在中国大陆访问 GitHub Pages 可能需要切换网络或刷新重试</small>
+            </div>
+
             <div class="form-group">
                 <label>备件名称关键词 <span class="required">*</span></label>
                 <input type="text" id="partName" placeholder="例如：风嘴、刀头、主刷、滤网、边刷..." autocomplete="off">
@@ -321,6 +345,39 @@
 
     <script src="data.js"></script>
     <script>
+        // Check if data loaded correctly
+        const dataLoaded = typeof sparePartsData !== 'undefined' && Array.isArray(sparePartsData);
+        console.log('Data loaded:', dataLoaded, 'Records:', dataLoaded ? sparePartsData.length : 0);
+
+        if (!dataLoaded) {
+            document.getElementById('errorBox').classList.add('active');
+            document.getElementById('confirmBtn').disabled = true;
+            document.getElementById('confirmBtn').textContent = '数据加载失败，请刷新页面';
+        }
+
+        // HTML escape helper
+        function escapeHtml(text) {
+            if (text == null) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Image load error handler
+        function handleImgError(img) {
+            try {
+                img.style.display = 'none';
+                if (img.parentElement) {
+                    img.parentElement.innerHTML = '<div class="img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>暂无图片</span></div>';
+                }
+            } catch (e) {
+                console.warn('Image error handler failed:', e);
+            }
+        }
+
         function getCountries() {
             const countries = new Set();
             sparePartsData.forEach(item => { if (item.country) countries.add(item.country); });
@@ -372,30 +429,39 @@
         }
 
         function doSearch() {
-            const keyword = document.getElementById('partName').value.trim().toLowerCase();
-            const country = document.getElementById('countrySelect').value;
-            const model = document.getElementById('modelInput').value.trim().toLowerCase();
-            const category = document.getElementById('categorySelect').value;
+            try {
+                const keyword = document.getElementById('partName').value.trim().toLowerCase();
+                const country = document.getElementById('countrySelect').value;
+                const model = document.getElementById('modelInput').value.trim().toLowerCase();
+                const category = document.getElementById('categorySelect').value;
 
-            if (!keyword) {
-                alert('请输入备件名称关键词');
-                document.getElementById('partName').focus();
-                return;
-            }
+                if (!keyword) {
+                    alert('请输入备件名称关键词');
+                    document.getElementById('partName').focus();
+                    return;
+                }
 
-            const matched = sparePartsData.filter(item => {
-                const text = (item.name + ' ' + (item.partNumber || '') + ' ' + (item.model || '') + ' ' + (item.description || '')).toLowerCase();
-                const matchKeyword = text.includes(keyword) || (item.partNumber && item.partNumber.toLowerCase().includes(keyword));
-                const matchCountry = !country || item.country === country;
-                const matchModel = !model || (item.model && item.model.toLowerCase().includes(model)) || model.includes((item.model || '').toLowerCase());
-                const matchCategory = !category || item.category === category;
-                return matchKeyword && matchCountry && matchModel && matchCategory;
-            });
+                console.log('Searching for:', { keyword, country, model, category });
 
-            if (matched.length === 0) {
-                showNoResult();
-            } else {
-                showResults(matched, keyword, country, model, category);
+                const matched = sparePartsData.filter(item => {
+                    const text = (item.name + ' ' + (item.partNumber || '') + ' ' + (item.model || '') + ' ' + (item.description || '')).toLowerCase();
+                    const matchKeyword = text.includes(keyword) || (item.partNumber && item.partNumber.toLowerCase().includes(keyword));
+                    const matchCountry = !country || item.country === country;
+                    const matchModel = !model || (item.model && item.model.toLowerCase().includes(model)) || model.includes((item.model || '').toLowerCase());
+                    const matchCategory = !category || item.category === category;
+                    return matchKeyword && matchCountry && matchModel && matchCategory;
+                });
+
+                console.log('Matched records:', matched.length);
+
+                if (matched.length === 0) {
+                    showNoResult();
+                } else {
+                    showResults(matched, keyword, country, model, category);
+                }
+            } catch (e) {
+                console.error('Search error:', e);
+                alert('搜索出错：' + e.message + '\n请刷新页面重试');
             }
         }
 
@@ -415,18 +481,18 @@
             list.innerHTML = items.map(item => {
                 const placeholderSvg = '<div class="img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>暂无图片</span></div>';
                 const imgHtml = item.image
-                    ? '<img src="' + item.image + '" alt="' + item.name + '" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<div class=\\'img-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><path d=\\'M21 15l-5-5L5 21\\'/></svg><span>暂无图片</span></div>\'">'
+                    ? '<img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.name) + '" loading="lazy" onerror="handleImgError(this)">'
                     : placeholderSvg;
                 return '<div class="result-item">' +
-                    '<div class="result-img" data-img="' + (item.image || '') + '" onclick="openLightbox(this)">' + imgHtml + '</div>' +
+                    '<div class="result-img" data-img="' + escapeHtml(item.image || '') + '" onclick="openLightbox(this)">' + imgHtml + '</div>' +
                     '<div class="result-info">' +
-                        '<div class="name">' + item.name + '</div>' +
+                        '<div class="name">' + escapeHtml(item.name) + '</div>' +
                         '<div class="meta">' +
-                            '<span>' + getCategoryIcon(item.category) + ' ' + item.category + '</span>' +
-                            '<span>' + getCountryFlag(item.country) + ' ' + item.country + '</span>' +
-                            (item.model ? '<span>\uD83D\uDD27 ' + item.model + '</span>' : '') +
+                            '<span>' + getCategoryIcon(item.category) + ' ' + escapeHtml(item.category) + '</span>' +
+                            '<span>' + getCountryFlag(item.country) + ' ' + escapeHtml(item.country) + '</span>' +
+                            (item.model ? '<span>\uD83D\uDD27 ' + escapeHtml(item.model) + '</span>' : '') +
                         '</div>' +
-                        '<div class="part-number">' + item.partNumber + '</div>' +
+                        '<div class="part-number">' + escapeHtml(item.partNumber) + '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -455,13 +521,31 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            populateSelects();
+            if (dataLoaded) {
+                try {
+                    populateSelects();
+                } catch (e) {
+                    console.error('populateSelects error:', e);
+                }
+            }
 
-            document.getElementById('confirmBtn').addEventListener('click', doSearch);
+            document.getElementById('confirmBtn').addEventListener('click', () => {
+                if (dataLoaded) {
+                    doSearch();
+                } else {
+                    alert('数据未加载，请刷新页面');
+                }
+            });
 
             ['partName', 'categorySelect', 'countrySelect', 'modelInput'].forEach(id => {
                 document.getElementById(id).addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') doSearch();
+                    if (e.key === 'Enter') {
+                        if (dataLoaded) {
+                            doSearch();
+                        } else {
+                            alert('数据未加载，请刷新页面');
+                        }
+                    }
                 });
             });
 
