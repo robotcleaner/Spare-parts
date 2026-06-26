@@ -145,10 +145,7 @@
             padding: 16px 20px 20px;
         }
         .result-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            padding: 14px;
+            padding: 14px 16px;
             border-radius: 12px;
             margin-bottom: 10px;
             background: #f8f9fb;
@@ -158,69 +155,11 @@
         .result-item:last-child { margin-bottom: 0; }
         .result-item:hover { background: #f0f2f6; border-color: #d0d4dc; }
 
-        .result-img {
-            width: 80px; height: 80px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #e8ecf1 0%, #dce2e8 100%);
-            display: flex; align-items: center; justify-content: center;
-            color: #999;
-            font-size: 1.6rem;
-            flex-shrink: 0;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .result-img:hover { transform: scale(1.05); }
-        .result-img img { width: 100%; height: 100%; object-fit: cover; }
-        .result-img .img-placeholder {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; height: 100%;
-            background: #f0f2f5;
-            color: #bbb;
-            font-size: 0.7rem;
-            gap: 2px;
-        }
-        .result-img .img-placeholder svg {
-            width: 24px; height: 24px;
-            stroke: #ccc;
-        }
-
-        /* Image lightbox */
-        .lightbox-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .lightbox-overlay.active { display: flex; }
-        .lightbox-img {
-            max-width: 90vw;
-            max-height: 85vh;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-        .lightbox-close {
-            position: absolute;
-            top: 16px; right: 16px;
-            width: 40px; height: 40px;
-            background: rgba(255,255,255,0.15);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.4rem;
-            cursor: pointer;
-        }
-
-        .result-info { flex: 1; min-width: 0; }
         .result-info .name {
             font-size: 0.95rem;
             font-weight: 600;
             color: #222;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             line-height: 1.35;
         }
         .result-info .meta {
@@ -240,7 +179,7 @@
             color: #667eea;
             font-weight: 700;
             font-size: 0.9rem;
-            margin-top: 6px;
+            margin-top: 8px;
             letter-spacing: 0.3px;
         }
 
@@ -263,8 +202,6 @@
             .header h1 { font-size: 1.5rem; }
             .search-panel { padding: 22px 18px; }
             .modal-content { max-width: 100%; }
-            .result-item { gap: 10px; padding: 12px; }
-            .result-img { width: 60px; height: 60px; font-size: 1.3rem; }
         }
     </style>
 </head>
@@ -337,12 +274,6 @@
         </div>
     </div>
 
-    <!-- Image Lightbox -->
-    <div class="lightbox-overlay" id="lightbox">
-        <button class="lightbox-close" id="lightboxClose">&times;</button>
-        <img class="lightbox-img" id="lightboxImg" src="" alt="">
-    </div>
-
     <script src="data.js"></script>
     <script>
         // Check if data loaded correctly
@@ -355,7 +286,6 @@
             document.getElementById('confirmBtn').textContent = '数据加载失败，请刷新页面';
         }
 
-        // HTML escape helper
         function escapeHtml(text) {
             if (text == null) return '';
             return String(text)
@@ -364,18 +294,6 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
-        }
-
-        // Image load error handler
-        function handleImgError(img) {
-            try {
-                img.style.display = 'none';
-                if (img.parentElement) {
-                    img.parentElement.innerHTML = '<div class="img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>暂无图片</span></div>';
-                }
-            } catch (e) {
-                console.warn('Image error handler failed:', e);
-            }
         }
 
         function getCountries() {
@@ -475,16 +393,11 @@
             if (category) filters.push(category);
             if (country) filters.push(country);
             if (model) filters.push(model);
-            title.textContent = '"' + keyword + '"' + (filters.length ? ' · ' + filters.join(' · ') : '') + ' 的查询结果';
+            title.textContent = '"' + keyword + '"' + (filters.length ? ' \u00b7 ' + filters.join(' \u00b7 ') : '') + ' 的查询结果';
             count.textContent = '共找到 ' + items.length + ' 条记录';
 
             list.innerHTML = items.map(item => {
-                const placeholderSvg = '<div class="img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>暂无图片</span></div>';
-                const imgHtml = item.image
-                    ? '<img src="' + escapeHtml(item.image) + '" alt="' + escapeHtml(item.name) + '" loading="lazy" onerror="handleImgError(this)">'
-                    : placeholderSvg;
                 return '<div class="result-item">' +
-                    '<div class="result-img" data-img="' + escapeHtml(item.image || '') + '" onclick="openLightbox(this)">' + imgHtml + '</div>' +
                     '<div class="result-info">' +
                         '<div class="name">' + escapeHtml(item.name) + '</div>' +
                         '<div class="meta">' +
@@ -492,7 +405,7 @@
                             '<span>' + getCountryFlag(item.country) + ' ' + escapeHtml(item.country) + '</span>' +
                             (item.model ? '<span>\uD83D\uDD27 ' + escapeHtml(item.model) + '</span>' : '') +
                         '</div>' +
-                        '<div class="part-number">' + escapeHtml(item.partNumber) + '</div>' +
+                        '<div class="part-number">料号: ' + escapeHtml(item.partNumber) + '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -506,18 +419,6 @@
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
-        }
-
-        function openLightbox(el) {
-            const imgUrl = el.getAttribute('data-img');
-            if (!imgUrl) return;
-            document.getElementById('lightboxImg').src = imgUrl;
-            document.getElementById('lightbox').classList.add('active');
-        }
-
-        function closeLightbox() {
-            document.getElementById('lightbox').classList.remove('active');
-            document.getElementById('lightboxImg').src = '';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -559,16 +460,10 @@
                 if (e.target === e.currentTarget) closeModal('noResultModal');
             });
 
-            document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
-            document.getElementById('lightbox').addEventListener('click', (e) => {
-                if (e.target === e.currentTarget || e.target.id === 'lightboxImg') closeLightbox();
-            });
-
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeModal('resultModal');
                     closeModal('noResultModal');
-                    closeLightbox();
                 }
             });
         });
